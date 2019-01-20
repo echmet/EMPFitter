@@ -21,8 +21,8 @@ public:
 		using std::runtime_error::runtime_error;
 	};
 
-	BufferSystem(const SysComp::InConstituentVec *composition, const std::vector<double> &concentrations) :
-		concentrations(concentrations),
+	BufferSystem(const SysComp::InConstituentVec *composition, const std::vector<double> &_concentrations) :
+		concentrations(_concentrations),
 		m_movedAway(false)
 	{
 		m_composition = SysComp::duplicateInConstituentVec(composition);
@@ -40,8 +40,8 @@ public:
 		calculateEquilibrium();
 	}
 
-	BufferSystem(const SysComp::InConstituentVec *composition, std::vector<double> &&concentrations) :
-		concentrations(std::move(concentrations)),
+	BufferSystem(const SysComp::InConstituentVec *composition, std::vector<double> &&_concentrations) :
+		concentrations(std::move(_concentrations)),
 		m_movedAway(false)
 	{
 		m_composition = SysComp::duplicateInConstituentVec(composition);
@@ -59,8 +59,8 @@ public:
 		calculateEquilibrium();
 	}
 
-	BufferSystem(SysComp::InConstituentVec * &&composition, std::vector<double> &&concentrations) :
-		concentrations(std::move(concentrations)),
+	BufferSystem(SysComp::InConstituentVec * &&composition, std::vector<double> &&_concentrations) :
+		concentrations(std::move(_concentrations)),
 		m_composition(composition),
 		m_movedAway(false)
 	{

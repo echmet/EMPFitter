@@ -33,7 +33,7 @@ elseif (UNIX)
 		message(FATAL_ERROR "Clang 3.4 or newer is required to build libElmigParamsFitter")
 	endif ()
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -Wall -Wextra -Wno-c++98-compat -pedantic -fvisibility=hidden -g")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -Weverything -Wno-c++98-compat -Wpedantic -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     else ()

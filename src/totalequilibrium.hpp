@@ -55,7 +55,7 @@ void calculatedTsdV(std::vector<CAESReal> &dts, const CAESReal &v, const std::ve
  * @param[in] numLow Lowest equilibrium index.
  * @param[in] numHigh Highest equilibirium index.
  * @param[in] pBs Vector of consecutive equilibrium constants.
- * @param[in] concentration Analytical concentration of the constituent.
+ * @param[in] concentrationIndex Index of analytical concentration of the constituent
  */
 template <typename CAESReal>
 TotalEquilibrium<CAESReal, true>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex) :
@@ -72,7 +72,7 @@ TotalEquilibrium<CAESReal, true>::TotalEquilibrium(const int numLow, const int n
  * @param[in] numLow Lowest equilibrium index.
  * @param[in] numHigh Highest equilibirium index.
  * @param[in] pBs Vector of consecutive equilibrium constants.
- * @param[in] concentration Analytical concentration of the constituent.
+ * @param[in] concentrationIndex Index of analytical concentration of the constituent
  */
 template <typename CAESReal>
 TotalEquilibrium<CAESReal, false>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex) :

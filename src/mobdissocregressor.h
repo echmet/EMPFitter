@@ -289,7 +289,7 @@ public:
 	 * of buffer and analyte.
 	 *
 	 * @param[in] composition Composition of the background buffer.
-	 * @param[in] Physical-chemical properties of the analyte whose mobility is to be calculated.
+	 * @param[in] analyte Physical-chemical properties of the analyte whose mobility is to be calculated.
 	 * @param[in] concentrations Vector of analytical concentrations of background buffer components.
 	 * @param[in] cH <tt>first</tt> field controls whether the cH value is set to a valid value,
 	 *               <tt>second</tt> field contains the actual value of <tt>cH</tt>.
@@ -488,7 +488,7 @@ private:
 	 * Calculates effective mobility of analyte for a given set of paramers.
 	 *
 	 * @param x Buffer system to use in the calculation.
-	 * @params Physical-chemical properties of the analyte.
+	 * @param params Physical-chemical properties of the analyte.
 	 *
 	 * @return Effective mobility
 	 */

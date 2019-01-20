@@ -56,7 +56,7 @@ public:
 	 * @param[in] numLow Lowest equilibrium index
 	 * @param[in] numHigh Highest equilibirium index
 	 * @param[in] pBs Vector of consecutive equilibrium constants
-	 * @param[in] concentration Analytical concentration of the constituent
+	 * @param[in] concentrationIndex Index of analytical concentration of the constituent
 	 */
 	template <typename T = CAESReal, typename std::enable_if<!std::is_same<ECHMETReal, T>::value>::type>
 	TotalEquilibrium(const int numLow, const int numHigh, const std::vector<ECHMETReal> &pBs, const size_t concentrationIndex) :
@@ -120,7 +120,7 @@ public:
 	 * @param[in] numLow Lowest equilibrium index
 	 * @param[in] numHigh Highest equilibirium index
 	 * @param[in] pBs Vector of consecutive equilibrium constants
-	 * @param[in] concentration Analytical concentration of the constituent
+	 * @param[in] concentrationIndex Index of analytical concentration of the constituent
 	 */
 	template <typename T = CAESReal, typename std::enable_if<!std::is_same<ECHMETReal, T>::value>::type>
 	TotalEquilibrium(const int numLow, const int numHigh, const std::vector<ECHMETReal> &pBs, const size_t concentrationIndex) :
