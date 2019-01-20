@@ -52,6 +52,7 @@ include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 set(libElmigParamsFitter_SRCS
+    src/mobdissocregressor.cpp
     src/elmigparamsfitter.cpp
     src/parametersfixerimpl.cpp)
 

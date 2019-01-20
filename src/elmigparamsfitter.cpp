@@ -2,7 +2,6 @@
 
 #include "mobdissocregressor.h"
 #include "parametersfixerimpl.h"
-#include "types.h"
 
 #include <cassert>
 #include <fstream>
@@ -13,8 +12,8 @@
 #include <containers/echmetvec_p.h>
 #undef ECHMET_IMPORT_INTERNAL
 
-#define _STRINGIFY(input) #input
-#define ERROR_CODE_CASE(erCase) case RetCode::erCase: return _STRINGIFY(erCase)
+#define M_STRINGIFY(input) #input
+#define ERROR_CODE_CASE(erCase) case RetCode::erCase: return M_STRINGIFY(erCase)
 
 namespace ECHMET {
 namespace ElmigParamsFitter {
@@ -282,12 +281,12 @@ RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &result
 
 double ECHMET_CC mobilityLowerBound() noexcept
 {
-	return MobDissocRegressor::MobilityLowerBound();
+	return MobDissocRegressor::MOBILITY_LOWER_BOUND;
 }
 
 double ECHMET_CC mobilityUpperBound() noexcept
 {
-	return MobDissocRegressor::MobilityUpperBound();
+	return MobDissocRegressor::MOBILITY_UPPER_BOUND;
 }
 
 RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, FitResults &results) noexcept
