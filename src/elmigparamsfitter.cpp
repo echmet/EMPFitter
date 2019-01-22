@@ -24,8 +24,10 @@ public:
 	{
 		const auto log = TRACER_INSTANCE<RegressTracing>().logged();
 
-		std::ofstream ofs("dump.txt");
-		ofs << log;
+		if (log.size() > 0) {
+				std::ofstream ofs("dump.txt");
+				ofs << log;
+		}
 	}
 };
 
@@ -147,8 +149,6 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 	    FitResults &results)
 {
 	TraceDumper dumper{};
-
-	TRACER_INSTANCE<RegressTracing>().enableAllTracepoints();
 
 	MobDissocRegressor regressor(std::move(bufSysVec), InConstituentWrapper(analyte), corrs);
 
