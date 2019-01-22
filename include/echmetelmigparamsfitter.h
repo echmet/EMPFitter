@@ -89,7 +89,7 @@ protected:
 
 extern "C" {
 
-ECHMET_API bool checkSanity(const SysComp::InConstituent &analyte) ECHMET_NOEXCEPT;
+ECHMET_API bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte) ECHMET_NOEXCEPT;
 ECHMET_API InBufferVec * ECHMET_CC createInBufferVec() ECHMET_NOEXCEPT;
 ECHMET_API ParametersFixer * ECHMET_CC createParametersFixer() ECHMET_NOEXCEPT;
 ECHMET_API const char * ECHMET_CC EMPFerrorToString(const RetCode tRet) ECHMET_NOEXCEPT;

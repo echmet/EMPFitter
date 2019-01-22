@@ -225,14 +225,14 @@ private:
 	{
 		assert(bufSys.m_composition->size() == bufSys.concentrations.size());
 
-		os << std::string("---\n");
+		os << std::string("---\n").c_str();
 		os << "pH: " << bufSys.m_pH << "\n";
 		for (size_t idx = 0; idx < bufSys.m_composition->size(); idx++) {
 			const auto &ctuent = bufSys.m_composition->at(idx);
 
 			os << ctuent.name->c_str() << ", " << bufSys.concentrations.at(idx) << "(mM)\n";
 		}
-		os << std::string("---\n");
+		os << std::string("---\n").c_str();
 	}
 
 	RealVec * makeConcentrationsVec(const std::vector<double> &src)

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 
-add_definitions("-DECHMET_DLL_BUILD")
+project(ElmigParamsFitter)
+
+add_definitions("-DECHMET_DLL_BUILD -D_USE_MATH_DEFINES")
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
