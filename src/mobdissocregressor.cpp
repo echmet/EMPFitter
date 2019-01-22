@@ -406,12 +406,12 @@ bool MobDissocRegressor::CheckSanityInternal(const ParamsVector &params, const S
 		return (uCurr > lowerBound) && (uCurr < upperBound);
 	};
 
-	const auto mobilityIndex = [&analyte](int charge) {
-		const PVSize uZeroIdx = static_cast<PVSize>(-analyte.chargeLow);	/* "Imaginary" index of mobility of the zero charge parameter */
+        const auto mobilityIndex = [&analyte](int charge) -> PVSize{
+		PVSize idx = charge - analyte.chargeLow;
 
-		if (charge > 0)
-			charge--;
-		return uZeroIdx + charge;
+		if (charge > 0 && analyte.chargeLow <= 0)
+			idx--;
+		return idx;
 	};
 
 	PVSize idx{0};
