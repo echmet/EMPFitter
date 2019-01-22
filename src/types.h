@@ -8,8 +8,6 @@
 #include <ostream>
 #include <vector>
 
-#include <iostream>
-
 namespace ECHMET {
 
 typedef std::pair<std::vector<double>, std::vector<double>> ExperimentalData;
@@ -21,27 +19,10 @@ public:
 		using std::runtime_error::runtime_error;
 	};
 
-	BufferSystem(const SysComp::InConstituentVec *composition, const std::vector<double> &_concentrations) :
-		concentrations(_concentrations),
-		m_movedAway(false)
-	{
-		m_composition = SysComp::duplicateInConstituentVec(composition);
-		if (composition == nullptr)
-			throw std::bad_alloc();
-
-		try {
-			m_concentrationsRVec = makeConcentrationsVec(this->concentrations);
-		} catch (const std::bad_alloc &) {
-			SysComp::releaseInputData(m_composition);
-
-			throw;
-		}
-
-		calculateEquilibrium();
-	}
-
-	BufferSystem(const SysComp::InConstituentVec *composition, std::vector<double> &&_concentrations) :
+	BufferSystem(const SysComp::InConstituentVec *composition, std::vector<double> _concentrations,
+		     const bool debyeHuckel) :
 		concentrations(std::move(_concentrations)),
+		m_debyeHuckel(debyeHuckel),
 		m_movedAway(false)
 	{
 		m_composition = SysComp::duplicateInConstituentVec(composition);
@@ -59,12 +40,13 @@ public:
 		calculateEquilibrium();
 	}
 
-	BufferSystem(SysComp::InConstituentVec * &&composition, std::vector<double> &&_concentrations) :
+	BufferSystem(SysComp::InConstituentVec * &&composition, std::vector<double> _concentrations,
+		     const bool debyeHuckel) :
 		concentrations(std::move(_concentrations)),
 		m_composition(composition),
+		m_debyeHuckel(debyeHuckel),
 		m_movedAway(false)
 	{
-		std::cout << "BufferSystem move c-tor" << std::endl;
 		try {
 			m_concentrationsRVec = makeConcentrationsVec(this->concentrations);
 		} catch (const std::bad_alloc &) {
@@ -80,6 +62,7 @@ public:
 		concentrations(other.concentrations),
 		m_cH(other.m_cH),
 		m_pH(other.m_pH),
+		m_debyeHuckel(other.m_debyeHuckel),
 		m_movedAway(other.m_movedAway)
 	{
 		m_composition = SysComp::duplicateInConstituentVec(other.m_composition);
@@ -100,6 +83,7 @@ public:
 		m_concentrationsRVec(other.m_concentrationsRVec),
 		m_cH(other.m_cH),
 		m_pH(other.m_pH),
+		m_debyeHuckel(other.m_debyeHuckel),
 		m_movedAway(other.m_movedAway)
 	{
 		other.m_movedAway = true;
@@ -159,6 +143,7 @@ public:
 		m_concentrationsRVec = cRVec;
 		m_cH = other.m_cH;
 		m_pH = other.m_pH;
+		m_debyeHuckel = other.m_debyeHuckel;
 		m_movedAway = other.m_movedAway;
 
 		return *this;
@@ -171,6 +156,7 @@ public:
 		m_concentrationsRVec = other.m_concentrationsRVec;
 		m_cH = other.m_cH;
 		m_pH = other.m_pH;
+		m_debyeHuckel = other.m_debyeHuckel;
 		m_movedAway = other.m_movedAway;
 
 		other.m_movedAway = true;
@@ -188,9 +174,9 @@ private:
 		SysComp::ChemicalSystem chemSystem;
 		SysComp::CalculatedProperties calcProps;
 
-		NonidealityCorrections corrections;
-		nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
-		nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS);
+		NonidealityCorrections corrections = defaultNonidealityCorrections();
+		if (m_debyeHuckel)
+			nonidealityCorrectionSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
 		auto tRet = SysComp::makeComposition(chemSystem, calcProps, m_composition);
 		if (tRet != RetCode::OK)
@@ -271,6 +257,7 @@ private:
 
 	double m_cH;
 	double m_pH;
+	bool m_debyeHuckel;
 
 	bool m_movedAway;
 };

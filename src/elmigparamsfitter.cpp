@@ -161,7 +161,6 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 		if (!regressor.Initialize(expDataVec))
 			return RetCode::E_REGRESSOR_INITIALIZATION;
 	} catch (const RegressCore::RegressException &ex) {
-		std::cerr << ex.what() << "\n";
 		return RetCode::E_REGRESSOR_INTERNAL_ERROR;
 	}
 
@@ -177,7 +176,7 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 
 static
 std::tuple<BufferSystemVec,
-	   std::vector<double>> makeBuffersVector(const InBufferVec *buffers)
+	   std::vector<double>> makeBuffersVector(const InBufferVec *buffers, const NonidealityCorrections corrs)
 {
 	BufferSystemVec bVec{};
 	std::vector<double> eVec{};
@@ -190,7 +189,7 @@ std::tuple<BufferSystemVec,
 
 		std::vector<double> concs = realVecToSTL(buf.concentrations);
 
-		bVec.emplace_back(buf.composition, std::move(concs));
+		bVec.emplace_back(buf.composition, std::move(concs), nonidealityCorrectionIsSet(corrs, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL));
 		eVec.emplace_back(buf.uEffExperimental);
 	}
 
@@ -268,7 +267,6 @@ RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &result
 			if (tRet != ECHMET::RetCode::OK)
 				return RetCode::E_NO_MEMORY;
 		} catch (const RegressCore::RegressException &ex) {
-			std::cerr << ex.what() << "\n";
 			return RetCode::E_REGRESSOR_INTERNAL_ERROR;
 		}
 
@@ -300,7 +298,7 @@ RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, 
 		return RetCode::E_NOT_ENOUGH_MEASUREMENTS;
 
 	try {
-		auto dataPack = makeBuffersVector(system.buffers);
+		auto dataPack = makeBuffersVector(system.buffers, system.corrections);
 
 		return fit(std::move(std::get<0>(dataPack)),
 			   std::move(std::get<1>(dataPack)),
