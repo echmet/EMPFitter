@@ -230,11 +230,11 @@ bool MobDissocRegressor::Initialize(const std::vector<double> &inYVec)
 	return RFType::Initialize(m_bufSysVec, yVec, 1.0e-8, 200, true);
 }
 
-std::pair<double, double> MobDissocRegressor::SolveBuffer(const SysComp::InConstituentVec *composition,
-							  const SysComp::InConstituent &analyte,
-							  const RealVec *concentrations,
-							  const std::pair<bool, double> cH,
-							  const NonidealityCorrections corrs)
+double MobDissocRegressor::SolveBuffer(const SysComp::InConstituentVec *composition,
+				       const SysComp::InConstituent &analyte,
+				       const RealVec *concentrations,
+				       const double cH,
+				       const NonidealityCorrections corrs)
 {
 	SysComp::ChemicalSystem chemSystem{};
 	SysComp::CalculatedProperties calcProps{};
@@ -278,11 +278,8 @@ std::pair<double, double> MobDissocRegressor::SolveBuffer(const SysComp::InConst
 		throw RegressCore::RegressException("Unable to create solver");
 	}
 
-	if (cH.first) {
-		tRet = solver->estimateDistributionFast(cH.second, concVec, calcProps);
-		if (tRet != RetCode::OK)
-			tRet = solver->estimateDistributionSafe(concVec, calcProps);
-	} else
+	tRet = solver->estimateDistributionFast(cH, concVec, calcProps);
+	if (tRet != RetCode::OK)
 		tRet = solver->estimateDistributionSafe(concVec, calcProps);
 
 	if (tRet != RetCode::OK) {
@@ -360,13 +357,6 @@ std::pair<double, double> MobDissocRegressor::SolveBuffer(const SysComp::InConst
 	}
 	debugDumpUEff(uEff, calcProps.ionicConcentrations->at(0), calcProps.ionicStrength);
 
-	const double pH = [&]() {
-		if (cH.first)
-			return cH.second;
-		return IonProps::calculatepH_direct(calcProps.ionicConcentrations->at(0),
-						    calcProps.ionicStrength);
-	}();
-
 	concVec->destroy();
 	ionCtx->destroy();
 	solver->destroy();
@@ -375,7 +365,7 @@ std::pair<double, double> MobDissocRegressor::SolveBuffer(const SysComp::InConst
 	SysComp::releaseChemicalSystem(chemSystem);
 	SysComp::releaseCalculatedProperties(calcProps);
 
-	return { uEff, pH };
+	return uEff;
 }
 
 void MobDissocRegressor::ApplyParameters(SysComp::InConstituent &analyte, const ParamsVector &params) const
@@ -403,7 +393,7 @@ double MobDissocRegressor::CalculateEffectiveMobility(const BufferSystem &x, con
 	ApplyParameters(analyte(), params);
 
 	return SolveBuffer(x.composition(), analyte(), x.concentrationsRVec(),
-			   { true, x.cH() }, m_solverCorrections).first;
+			   x.cH(), m_solverCorrections);
 }
 
 bool MobDissocRegressor::CheckSanityInternal(const ParamsVector &params, const SysComp::InConstituent &analyte,

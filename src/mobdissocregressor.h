@@ -89,19 +89,18 @@ public:
 	 * @param[in] composition Composition of the background buffer.
 	 * @param[in] analyte Physical-chemical properties of the analyte whose mobility is to be calculated.
 	 * @param[in] concentrations Vector of analytical concentrations of background buffer components.
-	 * @param[in] cH <tt>first</tt> field controls whether the cH value is set to a valid value,
-	 *               <tt>second</tt> field contains the actual value of <tt>cH</tt>.
+	 * @param[in] cH Concentration of H<sub>3</sub>3O<sup>+</sup> ions in plain buffer.
 	 * @param[in] corrs Nonideality corrections that shall be applied.
 	 *
 	 * @return Effective mobility and pH as <tt>std::pair&lt;double, double&gt;</tt>.
 	 *         Effective mobility is first, pH second.
 	 */
 	static
-	std::pair<double, double> SolveBuffer(const SysComp::InConstituentVec *composition,
-					      const SysComp::InConstituent &analyte,
-					      const RealVec *concentrations,
-					      const std::pair<bool, double> cH,
-					      const NonidealityCorrections corrs);
+	double SolveBuffer(const SysComp::InConstituentVec *composition,
+			   const SysComp::InConstituent &analyte,
+			   const RealVec *concentrations,
+			   const double cH,
+			   const NonidealityCorrections corrs);
 
 	constexpr static const double MOBILITY_LOWER_BOUND{0.55};
 	constexpr static const double MOBILITY_UPPER_BOUND{1.2};

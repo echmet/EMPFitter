@@ -256,20 +256,29 @@ RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &result
 		}
 	}
 
-	for (size_t idx = 0; idx < system.buffers->size(); idx++) {
-		const auto &buffer = system.buffers->at(idx);
+	try {
+		auto bpack = makeBuffersVector(system.buffers, system.corrections);
+		const auto &prepBuffers = std::get<0>(bpack);
 
-		try {
-			const auto sol = MobDissocRegressor::SolveBuffer(buffer.composition, fixedAnalyte(),
-									 buffer.concentrations, { false, 0.0 },
-									 system.corrections);
-			auto tRet = curveWrap->push_back({ sol.second, buffer.uEffExperimental, sol.first });
-			if (tRet != ECHMET::RetCode::OK)
-				return RetCode::E_NO_MEMORY;
-		} catch (const RegressCore::RegressException &ex) {
-			return RetCode::E_REGRESSOR_INTERNAL_ERROR;
+		assert(prepBuffers.size() == system.buffers->size());
+
+		for (size_t idx = 0; idx < system.buffers->size(); idx++) {
+			const auto &inBuf = system.buffers->at(idx);
+			const auto &buffer = prepBuffers.at(idx);
+
+			try {
+				const auto uEff = MobDissocRegressor::SolveBuffer(buffer.composition(), fixedAnalyte(),
+										  buffer.concentrationsRVec(), buffer.cH(),
+										  system.corrections);
+				auto tRet = curveWrap->push_back({ buffer.pH(), inBuf.uEffExperimental, uEff });
+				if (tRet != ECHMET::RetCode::OK)
+					return RetCode::E_NO_MEMORY;
+			} catch (const RegressCore::RegressException &ex) {
+				return RetCode::E_REGRESSOR_INTERNAL_ERROR;
+			}
 		}
-
+	} catch (const BufferSystem::BufferSystemException &ex) {
+		return RetCode::E_INVALID_BUFFER;
 	}
 
 	curve = curveWrap.release();
