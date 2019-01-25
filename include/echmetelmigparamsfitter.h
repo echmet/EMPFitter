@@ -72,6 +72,7 @@ class FitResults {
 public:
 	FittedParameterVec *mobilities;
 	FittedParameterVec *pKas;
+	double rSquared;
 };
 IS_POD(FitResults)
 

@@ -51,7 +51,9 @@ std::vector<double> realVecToSTL(const RealVec *vec)
 }
 
 static
-RetCode fillResults(const MobDissocRegressor::ParamsVector &params, const MobDissocRegressor::YTVector &variances, const SysComp::InConstituent &analyte, FitResults &results)
+RetCode fillResults(const MobDissocRegressor::ParamsVector &params, const MobDissocRegressor::YTVector &variances,
+		    const SysComp::InConstituent &analyte, const double rSquared,
+		    FitResults &results)
 {
 	const int chargeSpan = analyte.chargeHigh - analyte.chargeLow;
 	FittedParameterVec *mobilities = nullptr;
@@ -94,6 +96,7 @@ RetCode fillResults(const MobDissocRegressor::ParamsVector &params, const MobDis
 
 	results.mobilities = mobilities;
 	results.pKas = pKas;
+	results.rSquared = rSquared;
 
 	return RetCode::OK;
 
@@ -171,7 +174,8 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 		return RetCode::E_REGRESSOR_INTERNAL_ERROR;
 	}
 
-	return fillResults(regressor.GetParameters(), regressor.GetVariances(), analyte, results);
+	return fillResults(regressor.GetParameters(), regressor.GetVariances(), analyte, regressor.GetRSquared(),
+			   results);
 }
 
 static
