@@ -28,6 +28,18 @@ ECHMET_ST_ENUM(FixedParameterType) {
 	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterFixedParameterType)
 };
 
+/*!
+ * Description of a tracepoint.
+ */
+class TracepointInfo {
+public:
+	int32_t id;			/*!< Internal ID of the tracepoint. Used to
+					     set the tracepoint state. */
+	FixedString *description;	/*!< Human-readable description of the tracepoint. */
+};
+IS_POD(TracepointInfo)
+typedef Vec<TracepointInfo> TracepointInfoVec;
+
 class InBuffer {
 public:
 	SysComp::InConstituentVec *composition;
@@ -102,6 +114,47 @@ ECHMET_API void ECHMET_CC releaseInBuffer(const InBuffer &buffer) ECHMET_NOEXCEP
 ECHMET_API void ECHMET_CC releaseInBufferVec(const InBufferVec *vec) ECHMET_NOEXCEPT;
 ECHMET_API void ECHMET_CC releaseInSystem(InSystem &system) ECHMET_NOEXCEPT;
 ECHMET_API void ECHMET_CC releaseResults(FitResults &results) ECHMET_NOEXCEPT;
+
+/*!
+ * Sets all tracepoints to the given state.
+ *
+ * @param[in] state If \p true all tracepoints will be enabled and vice versa.
+ */
+ECHMET_API void ECHMET_CC toggleAllTracepoints(const bool state) ECHMET_NOEXCEPT;
+
+/*!
+ * Set state of one tracepoint.
+ *
+ * @param[in] TPID Internal ID of the tracepoint to set.
+ * @param[in] state If \p true the tracepoint will be enabled and vice versa.
+ */
+ECHMET_API void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) ECHMET_NOEXCEPT;
+
+/*!
+ * Returns the complete trace.
+ *
+ * @param[in] dontClear If \p true the trace log will not be cleared.
+ *
+ * @return String containing the whole trace.
+ */
+ECHMET_API FixedString * ECHMET_CC trace(const bool dontClear = false) ECHMET_NOEXCEPT;
+
+/*!
+ * Returns information about available tracepoints.
+ *
+ * @retval Pointer to a vector of all available tracepoints. May be \p NULL if
+ *         the operation fails or if no tracepoins are available.
+ */
+ECHMET_API TracepointInfoVec * ECHMET_CC tracepointInfo() ECHMET_NOEXCEPT;
+
+/*!
+ * Returns the state of a given tracepoint.
+ *
+ * @param[in] TPID Internal ID of the tracepoint whose state is requested.
+ *
+ * @retval \p true if the tracepoint is enabled and vice versa.
+ */
+ECHMET_API bool ECHMET_CC tracepointState(const int32_t TPID) ECHMET_NOEXCEPT;
 
 }
 

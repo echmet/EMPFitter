@@ -18,19 +18,6 @@
 namespace ECHMET {
 namespace ElmigParamsFitter {
 
-class TraceDumper {
-public:
-	~TraceDumper()
-	{
-		const auto log = TRACER_INSTANCE<RegressTracing>().logged();
-
-		if (log.size() > 0) {
-				std::ofstream ofs("dump.txt");
-				ofs << log;
-		}
-	}
-};
-
 static
 std::tuple<double> statDataFromVariance(const double variance) noexcept
 {
@@ -151,8 +138,6 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 	    const ParametersFixer *fixer,
 	    FitResults &results)
 {
-	TraceDumper dumper{};
-
 	MobDissocRegressor regressor(std::move(bufSysVec), InConstituentWrapper(analyte), corrs);
 
 	if (fixer != nullptr)
@@ -362,6 +347,66 @@ void ECHMET_CC releaseResults(FitResults &results) noexcept
 		results.pKas->destroy();
 		results.pKas = nullptr;
 	}
+}
+
+void ECHMET_CC toggleAllTracepoints(const bool state) noexcept
+{
+	if (state)
+		TRACER_INSTANCE<RegressTracing>().enableAllTracepoints();
+	else
+		TRACER_INSTANCE<RegressTracing>().disableAllTracepoints();
+}
+
+void ECHMET_CC toggleTracepoint(const int32_t TPID, const bool state) noexcept
+{
+	if (state)
+		TRACER_INSTANCE<RegressTracing>().enableTracepoint(TPID);
+	else
+		TRACER_INSTANCE<RegressTracing>().disableTracepoint(TPID);
+}
+
+FixedString * ECHMET_CC trace(const bool dontClear) noexcept
+{
+#ifdef ECHMET_TRACER_DISABLE_TRACING
+	(void)dontClear;
+	return nullptr;
+#else
+	return createFixedString(TRACER_INSTANCE<RegressTracing>().logged(dontClear).c_str());
+#endif // ECHMET_TRACER_DISABLE_TRACING
+}
+
+TracepointInfoVec * ECHMET_CC tracepointInfo() noexcept
+{
+#ifdef ECHMET_TRACER_DISABLE_TRACING
+	return nullptr;
+#else // ECHMET_TRACER_DISABLE_TRACING
+	VecImpl<TracepointInfo, false> *tpiVec = createECHMETVec<TracepointInfo, false>(0);
+	if (tpiVec == nullptr)
+		return nullptr;
+
+	auto &tpiVecSTL = tpiVec->STL();
+	auto &tracerInstance = TRACER_INSTANCE<RegressTracing>();
+	auto tracepoints = tracerInstance.tracepoints();
+
+	try {
+		for (auto &tp : tracepoints) {
+			FixedString *desc = createFixedString(std::get<1>(tp).c_str());
+			if (desc == nullptr)
+				throw std::bad_alloc{};
+			tpiVecSTL.emplace_back(TracepointInfo{std::get<0>(tp), desc});
+		}
+	} catch (std::bad_alloc &) {
+		tpiVec->destroy();
+		return nullptr;
+	}
+
+	return tpiVec;
+#endif // ECHMET_TRACER_DISABLE_TRACING
+}
+
+bool ECHMET_CC tracepointState(const int32_t TPID) noexcept
+{
+	return TRACER_INSTANCE<RegressTracing>().isTracepointEnabled(TPID);
 }
 
 } // namespace ElmigParamsFitter
