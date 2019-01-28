@@ -1,4 +1,5 @@
 #include <echmetelmigparamsfitter.h>
+#include "elmigparamsfitter_config.h"
 
 #include "mobdissocregressor.h"
 #include "parametersfixerimpl.h"
@@ -14,6 +15,7 @@
 
 #define M_STRINGIFY(input) #input
 #define ERROR_CODE_CASE(erCase) case RetCode::erCase: return M_STRINGIFY(erCase)
+#define MK_VERSION_STRING(vmaj, vmin, vpatch) M_STRINGIFY(vmaj) "." M_STRINGIFY(vmin) "." M_STRINGIFY(vpatch)
 
 namespace ECHMET {
 namespace ElmigParamsFitter {
@@ -407,6 +409,11 @@ TracepointInfoVec * ECHMET_CC tracepointInfo() noexcept
 bool ECHMET_CC tracepointState(const int32_t TPID) noexcept
 {
 	return TRACER_INSTANCE<RegressTracing>().isTracepointEnabled(TPID);
+}
+
+const char * ECHMET_CC versionString() noexcept
+{
+	return MK_VERSION_STRING(EMPF_VERSION_MAJOR, EMPF_VERSION_MINOR, EMPF_VERSION_PATCH);
 }
 
 } // namespace ElmigParamsFitter

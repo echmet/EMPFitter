@@ -156,6 +156,13 @@ ECHMET_API TracepointInfoVec * ECHMET_CC tracepointInfo() ECHMET_NOEXCEPT;
  */
 ECHMET_API bool ECHMET_CC tracepointState(const int32_t TPID) ECHMET_NOEXCEPT;
 
+/*!
+ * Returns library version ID string
+ * The string is formatted as "MAJOR.MINOR.PATCH"
+ * where MAJOR, MINOR and PATCH are positive integers.
+ */
+ECHMET_API const char * ECHMET_CC versionString() ECHMET_NOEXCEPT;
+
 }
 
 } // namespace ElmigParamsFitter

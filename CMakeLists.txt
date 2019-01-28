@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.1)
 
 project(ElmigParamsFitter)
 
+set(EMPF_VERSION_MAJOR 0)
+set(EMPF_VERSION_MINOR 2)
+set(EMPF_VERSION_PATCH 0)
+
 add_definitions("-DECHMET_DLL_BUILD -D_USE_MATH_DEFINES")
 
 set(CMAKE_CXX_STANDARD 14)
@@ -51,7 +55,9 @@ include_directories(${INCLUDE_DIRECTORIES}
                     SYSTEM "${EIGEN_INCLUDE_DIR}"
                     SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs"
                     SYSTEM "${ECHMET_REGRESSOR_DIR}"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/include")
+                    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                    "${CMAKE_CURRENT_BINARY_DIR}"
+                    )
 
 set(libElmigParamsFitter_SRCS
     src/mobdissocregressor.cpp
@@ -66,11 +72,12 @@ set(EPFITTER_LINK_LIBS
 
 link_directories("${ECHMET_CORE_LIBS_DIR}/lib")
 
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/elmigparamsfitter_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/elmigparamsfitter_config.h")
 add_library(ElmigParamsFitter SHARED ${libElmigParamsFitter_SRCS})
 target_include_directories(ElmigParamsFitter PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(ElmigParamsFitter
-                      PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1
+                                 PROPERTIES VERSION ${EMPF_VERSION_MAJOR}.${EMPF_VERSION_MINOR}
+                                            SOVERSION ${EMPF_VERSION_MAJOR}.${EMPF_VERSION_MINOR}
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetelmigparamsfitter.h")
 target_link_libraries(ElmigParamsFitter
