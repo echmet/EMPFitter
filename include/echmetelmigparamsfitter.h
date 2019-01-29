@@ -78,8 +78,6 @@ public:
 };
 IS_POD(InSystem)
 
-typedef Vec<bool> InIsFixedVec;
-
 /*!
  * Point on the resulting fitted curve
  */
