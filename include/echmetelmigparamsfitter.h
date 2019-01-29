@@ -6,25 +6,36 @@
 #include <new>
 
 namespace ECHMET {
+
+/*!
+ * Package that implements electromigration parameters fitting calculator
+ */
 namespace ElmigParamsFitter {
 
+/*!
+ * Enumeration of allowed return codes
+ */
 ECHMET_ST_ENUM(RetCode) {
-	OK = 0,
-	E_INVALID_ARGUMENT = 0x1,
-	E_NOT_ENOUGH_MEASUREMENTS = 0x2,
-	E_BUFFERS_EXPDATA_MISMATCH = 0x3,
-	E_INVALID_BUFFER = 0x4,
-	E_NO_MEMORY = 0x5,
-	E_REGRESSOR_INITIALIZATION = 0x6,
-	E_REGRESSOR_NO_SOLUTION = 0x7,
-	E_REGRESSOR_INTERNAL_ERROR = 0x8,
-	E_REGRESSOR_PARAMETERS_NOT_SANE = 0x9,
+	OK = 0,					/*!< Success */
+	E_INVALID_ARGUMENT = 0x1,		/*<! Invalid argument passed to a function */
+	E_NOT_ENOUGH_MEASUREMENTS = 0x2,	/*<! Number of conducted measurements is insufficient
+						     to fit all parameters */
+	E_INVALID_BUFFER = 0x4,			/*<! Processed system contains invalid buffer */
+	E_NO_MEMORY = 0x5,			/*<! Insufficient memory */
+	E_REGRESSOR_INITIALIZATION = 0x6,	/*<! Failed to initialize regressor with the given
+						     set of input date */
+	E_REGRESSOR_NO_SOLUTION = 0x7,		/*<! Regressor failed to converge */
+	E_REGRESSOR_INTERNAL_ERROR = 0x8,	/*<! Unspecified regressor error */
+	E_REGRESSOR_PARAMETERS_NOT_SANE = 0x9,	/*<! Initial estimates are not sane */
 	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterRetCode)
 };
 
+/*!
+ * Fixable parameters of fit
+ */
 ECHMET_ST_ENUM(FixedParameterType) {
-	FPT_MOBILITY = 0,
-	FPT_PKA = 0x1,
+	FPT_MOBILITY = 0,			/*!< Fix mobility */
+	FPT_PKA = 0x1,				/*!< Fix pKa */
 	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterFixedParameterType)
 };
 
@@ -33,67 +44,130 @@ ECHMET_ST_ENUM(FixedParameterType) {
  */
 class TracepointInfo {
 public:
-	int32_t id;			/*!< Internal ID of the tracepoint. Used to
-					     set the tracepoint state. */
-	FixedString *description;	/*!< Human-readable description of the tracepoint. */
+	int32_t id;				/*!< Internal ID of the tracepoint. Used to
+						     set the tracepoint state. */
+	FixedString *description;		/*!< Human-readable description of the tracepoint. */
 };
 IS_POD(TracepointInfo)
 typedef Vec<TracepointInfo> TracepointInfoVec;
 
+/*!
+ * Input experimental conditions for a given background buffer
+ */
 class InBuffer {
 public:
-	SysComp::InConstituentVec *composition;
-	RealVec *concentrations;
-	double uEffExperimental;
+	SysComp::InConstituentVec *composition;	/*!< Buffer composition */
+	RealVec *concentrations;		/*!< Concentrations of buffer constituents.
+						     Order of concentrations shall be the same
+						     as the order of constituents in <tt>composition</tt>
+						     vector. */
+	double uEffExperimental;		/*!< Measured mobility of the analyte */
 };
 IS_POD(InBuffer)
 
 typedef Vec<InBuffer> InBufferVec;
 
+/*!
+ * Input description of the system to be processed
+ */
 class InSystem {
 public:
-	InBufferVec *buffers;
-	SysComp::InConstituent analyte;
-	NonidealityCorrections corrections;
+	InBufferVec *buffers;			/*!< Vector of buffers where the measurements were conducted. */
+	SysComp::InConstituent analyte;		/*!< Analyte with estimated mobility and pKa values */
+	NonidealityCorrections corrections;	/*!< Enabled ionic effects corrections */
 };
 IS_POD(InSystem)
 
 typedef Vec<bool> InIsFixedVec;
 
+/*!
+ * Point on the resulting fitted curve
+ */
 class ExpectedCurvePoint {
 public:
-	double pH;
-	double experimental;
-	double expected;
+	double pH;				/*!< Independent variable */
+	double experimental;			/*!< Measured (input) experimental mobility */
+	double expected;			/*!< Expected mobility computed from the fitted parameters */
 };
 IS_POD(ExpectedCurvePoint)
 
 typedef Vec<ExpectedCurvePoint> ExpectedCurvePointVec;
 
+/*!
+ * Computed fitted parameter
+ */
 class FittedParameter {
 public:
-	int charge;
-	double value;
-	double stDev;
+	int charge;				/*!< Respective analyte charge */
+	double value;				/*!< Value of the parameter */
+	double stDev;				/*!< Standard deviation. The lower the <tt>stDev</tt> is
+						     the more reliable the result is. */
 };
 IS_POD(FittedParameter)
 
 typedef Vec<FittedParameter> FittedParameterVec;
 
+/*!
+ * Results of a successful fit.
+ * Values for zero charge are excluded as the mobility of
+ * uncharged state is always expected to be zero.
+ */
 class FitResults {
 public:
-	FittedParameterVec *mobilities;
-	FittedParameterVec *pKas;
-	double rSquared;
+	FittedParameterVec *mobilities;		/*!< Fitted mobilities */
+	FittedParameterVec *pKas;		/*!< Fitted pKas */
+	double rSquared;			/*!< Coefficient of determination */
 };
 IS_POD(FitResults)
 
+/*!
+ * Helper gadget for fixing parameters of fit
+ */
 class ParametersFixer {
 public:
+	/*!
+	 * Fixes a parameter.
+	 *
+	 * @param[in] type Type of parameter to fix. Can be either <tt>FPT_MOBILITy</tt> or <tt>FPT_PKA</tt>.
+	 * @param[in] id Analyte charge for which to fix the parameter.
+	 * @param[in] value Fixed value
+	 *
+	 * @retval RetCode::OK Success
+	 * @retval RetCode::E_NO_MEMORY Insufficient memory
+	 */
 	virtual RetCode ECHMET_CC add(const FixedParameterType type, const int id, const double value) ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Destroy the object
+	 */
 	virtual void ECHMET_CC destroy() ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Returns whether a parameter is fixed.
+	 *
+	 * @param[in] type Type of parameter to fix. Can be either <tt>FPT_MOBILITy</tt> or <tt>FPT_PKA</tt>.
+	 * @param[in] id Analyte charge for which to fix the parameter.
+	 *
+	 * @return true if the parameter is fixed, false otherwise
+	 */
 	virtual bool ECHMET_CC isFixed(const FixedParameterType type, const int id) const ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Unfixes a fixed parameter.
+	 *
+	 * @param[in] type Type of parameter to fix. Can be either <tt>FPT_MOBILITy</tt> or <tt>FPT_PKA</tt>.
+	 * @param[in] id Analyte charge for which to fix the parameter.
+	 */
 	virtual void ECHMET_CC remove(const FixedParameterType type, const int id) ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Returns value of a fixed parameter.
+	 *
+	 * @param[in] type Type of parameter to fix. Can be either <tt>FPT_MOBILITy</tt> or <tt>FPT_PKA</tt>.
+	 * @param[in] id Analyte charge for which to fix the parameter.
+	 *
+	 * @return Value of a fixed parameter. If the given parameter is not fixed, zero is returned.
+	 */
 	virtual double ECHMET_CC value(const FixedParameterType type, const int id) const ECHMET_NOEXCEPT = 0;
 
 protected:
@@ -102,17 +176,107 @@ protected:
 
 extern "C" {
 
+/*!
+ * Checks whether analyte estimates are sane.
+ *
+ * Sane estimates must meet the following properties:
+ *
+ * - All pKa values must be descending
+ * - All charged forms must have non-zero mobility.
+ * - Uncharged form must have zero mobility
+ * - Mobility of consecutive forms must fall into range given by
+ *   <tt>mobilityLowerBound()</tt> and <tt>mobilityUpperBound()</tt>.
+ *
+ * @return true if estimates are sane, false otherwise
+ */
 ECHMET_API bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte) ECHMET_NOEXCEPT;
+
+/*!
+ * Creates empty vector if input buffers.
+ *
+ * @return Pointer to the buffers vector or <tt>NULL</tt> if the operation fails.
+ */
 ECHMET_API InBufferVec * ECHMET_CC createInBufferVec() ECHMET_NOEXCEPT;
+
+/*!
+ * Creates parameter fixing gadget.
+ *
+ * @return Pointer to the gadget or <tt>NULL</tt> if the operation fails.
+ */
 ECHMET_API ParametersFixer * ECHMET_CC createParametersFixer() ECHMET_NOEXCEPT;
+
+/*!
+ * Converts return code to respective human-readable error string.
+ *
+ * @param[in] tRet Return code to convert
+ *
+ * @return Human-readable error string
+ */
 ECHMET_API const char * ECHMET_CC EMPFerrorToString(const RetCode tRet) ECHMET_NOEXCEPT;
+
+/*!
+ * Computes expected pH vs. mobility curve.
+ *
+ * @param[in] system Description of the processed system.
+ * @param[in] results Computed results.
+ * @param[in,out] curve Pointer to vector of <tt>ExpectedCurvePoint</tt>s.
+ *
+ * @retval RetCode::E_MO_MEMORY Insufficient memory
+ * @retval RetCode::E_REGRESSOR_INTERNAL_ERROR Unable to compute expected mobility
+ * @retval RetCode::E_INVALID_BUFFER Invalid input buffer
+ */
 ECHMET_API RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &results, ExpectedCurvePointVec *&curve) ECHMET_NOEXCEPT;
+
+/*!
+ * Value of relative lower mobility bound
+ *
+ * @return Value of relative lower mobility bound
+ */
 ECHMET_API double ECHMET_CC mobilityLowerBound() ECHMET_NOEXCEPT;
+
+/*!
+ * Value of relative upper mobility bound
+ *
+ * @return Value of relative upper mobility bound
+ */
 ECHMET_API double ECHMET_CC mobilityUpperBound() ECHMET_NOEXCEPT;
+
+/*!
+ * Performs the fit.
+ *
+ * @param[in] system Input description of the system to be processed.
+ * @param[in] fixer Parameter fixing gadget. If the value is <tt>NULL</tt> all parameters are free.
+ * @param[in,out] results Fitted parameters.
+ */
 ECHMET_API RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, FitResults &results) ECHMET_NOEXCEPT;
+
+/*!
+ * Convenience function to properly release resources claimed by <tt>InBuffer</tt> object.
+ *
+ * @param[in] buffer <tt>InBuffer</tt> to be released.
+ */
 ECHMET_API void ECHMET_CC releaseInBuffer(const InBuffer &buffer) ECHMET_NOEXCEPT;
+
+/*!
+ * Convenience function to properly release all resources claimed by a vector
+ * of <tt>InBuffer</tt>s. Contents of the vector are released as well.
+ *
+ * @param[in] vec <tt>InBufferVec</tt> to be released.
+ */
 ECHMET_API void ECHMET_CC releaseInBufferVec(const InBufferVec *vec) ECHMET_NOEXCEPT;
+
+/*!
+ * Convenience function to release all resources claimed by <tt>InSystem</tt> object.
+ *
+ * @param[in] system <tt>InSystem</tt> to be released.
+ */
 ECHMET_API void ECHMET_CC releaseInSystem(InSystem &system) ECHMET_NOEXCEPT;
+
+/*!
+ * Convenience function to release all resources claimed by <tt>Resutls</tt> object.
+ *
+ * @param[in] results <tt>Results</tt> object to be released,
+ */
 ECHMET_API void ECHMET_CC releaseResults(FitResults &results) ECHMET_NOEXCEPT;
 
 /*!
@@ -152,7 +316,7 @@ ECHMET_API TracepointInfoVec * ECHMET_CC tracepointInfo() ECHMET_NOEXCEPT;
  *
  * @param[in] TPID Internal ID of the tracepoint whose state is requested.
  *
- * @retval \p true if the tracepoint is enabled and vice versa.
+ * @retval true if the tracepoint is enabled and vice versa.
  */
 ECHMET_API bool ECHMET_CC tracepointState(const int32_t TPID) ECHMET_NOEXCEPT;
 
