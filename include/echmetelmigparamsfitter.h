@@ -49,6 +49,10 @@ public:
 	FixedString *description;		/*!< Human-readable description of the tracepoint. */
 };
 IS_POD(TracepointInfo)
+
+/*!
+ * <tt>Vec</tt> of <tt>TracepointInfo</tt>s
+ */
 typedef Vec<TracepointInfo> TracepointInfoVec;
 
 /*!
@@ -65,6 +69,9 @@ public:
 };
 IS_POD(InBuffer)
 
+/*!
+ * <tt>Vec</tt> of <tt>InBuffer</tt>s
+ */
 typedef Vec<InBuffer> InBufferVec;
 
 /*!
@@ -89,6 +96,9 @@ public:
 };
 IS_POD(ExpectedCurvePoint)
 
+/*!
+ * <tt>Vec</tt> of <tt>ExpectedCurvePoint</tt>s
+ */
 typedef Vec<ExpectedCurvePoint> ExpectedCurvePointVec;
 
 /*!
@@ -103,6 +113,9 @@ public:
 };
 IS_POD(FittedParameter)
 
+/*!
+ * <tt>Vec</tt> of <tt>FittedParameter</tt>s
+ */
 typedef Vec<FittedParameter> FittedParameterVec;
 
 /*!
