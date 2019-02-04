@@ -52,12 +52,25 @@ if (EXTENDED_DEBUG)
 endif ()
 
 include_directories(${INCLUDE_DIRECTORIES}
-                    SYSTEM "${EIGEN_INCLUDE_DIR}"
-                    SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs"
-                    SYSTEM "${ECHMET_REGRESSOR_DIR}"
                     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-                    "${CMAKE_CURRENT_BINARY_DIR}"
-                    )
+                    "${CMAKE_CURRENT_BINARY_DIR}")
+
+if (NOT "${EIGEN_INCLUDE_DIR}" STREQUAL "")
+    include_directories(${INCLUDE_DIRECTORIES}
+                        SYSTEM "${EIGEN_INCLUDE_DIR}")
+endif ()
+
+if (NOT "${ECHMET_CORE_LIBS_DIR}" STREQUAL "")
+    include_directories(${INCLUDE_DIRECTORIES}
+                        SYSTEM "${ECHMET_CORE_LIBS_DIR}/include/ECHMET/CoreLibs")
+    link_directories(${LINK_DIRECTORIES}
+                     "${ECHMET_CORE_LIBS_DIR}/lib")
+endif ()
+
+if (NOT "${ECHMET_REGRESSOR_DIR}" STREQUAL "")
+    include_directories(${INCLUDE_DIRECTORIES}
+                        SYSTEM "${ECHMET_REGRESSOR_DIR}")
+endif ()
 
 set(libElmigParamsFitter_SRCS
     src/mobdissocregressor.cpp
@@ -70,7 +83,6 @@ set(EPFITTER_LINK_LIBS
     CAES
     IonProps)
 
-link_directories("${ECHMET_CORE_LIBS_DIR}/lib")
 
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/elmigparamsfitter_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/elmigparamsfitter_config.h")
 add_library(ElmigParamsFitter SHARED ${libElmigParamsFitter_SRCS})
