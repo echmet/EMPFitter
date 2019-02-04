@@ -17,16 +17,16 @@ namespace ElmigParamsFitter {
  */
 ECHMET_ST_ENUM(RetCode) {
 	OK = 0,					/*!< Success */
-	E_INVALID_ARGUMENT = 0x1,		/*<! Invalid argument passed to a function */
-	E_NOT_ENOUGH_MEASUREMENTS = 0x2,	/*<! Number of conducted measurements is insufficient
+	E_INVALID_ARGUMENT = 0x1,		/*!< Invalid argument passed to a function */
+	E_NOT_ENOUGH_MEASUREMENTS = 0x2,	/*!< Number of conducted measurements is insufficient
 						     to fit all parameters */
-	E_INVALID_BUFFER = 0x4,			/*<! Processed system contains invalid buffer */
-	E_NO_MEMORY = 0x5,			/*<! Insufficient memory */
-	E_REGRESSOR_INITIALIZATION = 0x6,	/*<! Failed to initialize regressor with the given
+	E_INVALID_BUFFER = 0x4,			/*!< Processed system contains invalid buffer */
+	E_NO_MEMORY = 0x5,			/*!< Insufficient memory */
+	E_REGRESSOR_INITIALIZATION = 0x6,	/*!< Failed to initialize regressor with the given
 						     set of input date */
-	E_REGRESSOR_NO_SOLUTION = 0x7,		/*<! Regressor failed to converge */
-	E_REGRESSOR_INTERNAL_ERROR = 0x8,	/*<! Unspecified regressor error */
-	E_REGRESSOR_PARAMETERS_NOT_SANE = 0x9,	/*<! Initial estimates are not sane */
+	E_REGRESSOR_NO_SOLUTION = 0x7,		/*!< Regressor failed to converge */
+	E_REGRESSOR_INTERNAL_ERROR = 0x8,	/*!< Unspecified regressor error */
+	E_REGRESSOR_PARAMETERS_NOT_SANE = 0x9,	/*!< Initial estimates are not sane */
 	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterRetCode)
 };
 
