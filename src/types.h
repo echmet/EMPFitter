@@ -213,7 +213,12 @@ private:
 		}
 
 		m_cH = calcProps.ionicConcentrations->at(0);
-		m_pH = IonProps::calculatepH_direct(m_cH, calcProps.ionicStrength);
+		m_pH = IonProps::calculatepH_direct(m_cH,
+						    [corrections, &calcProps]() {
+							if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL))
+								return calcProps.ionicStrength;
+							return 0.0;
+							}());
 
 		solver->destroy();
 		ctx->destroy();
