@@ -19,7 +19,8 @@ public:
 	using msize_t = RegressCore::msize_t;
 
 	MobDissocRegressor(const BufferSystemVec &bufSysVec, const InConstituentWrapper &analyte,
-			   const NonidealityCorrections corrections);
+			   const NonidealityCorrections corrections,
+			   const bool useMobilityConstraints);
 
 	/*!
 	 * Assignment operator analog.
@@ -80,7 +81,7 @@ public:
 
 	bool Initialize(const std::vector<double> &inYVec);
 
-	static bool CheckAnalyteSanity(const SysComp::InConstituent &analyte);
+	static bool CheckAnalyteSanity(const SysComp::InConstituent &analyte, const bool useMobilityConstraints);
 
 	/*!
 	 * Calculates effective mobility and optionally pH for a given combination
@@ -127,7 +128,7 @@ private:
 	void SetParameters(ParamsVector &params, const SysComp::InConstituent &analyte);
 
 	static bool CheckSanityInternal(const ParamsVector &params, const SysComp::InConstituent &analyte,
-					const size_t NMobilities) noexcept;
+					const size_t NMobilities, const bool useMobilityConstraints) noexcept;
 
 	static PVSize CountNumberOfMobilities(const SysComp::InConstituent &analyte) noexcept;
 
@@ -139,7 +140,8 @@ private:
 	BufferSystemVec m_bufSysVec;
 	InConstituentWrapper m_analyte;
 
-	NonidealityCorrections m_solverCorrections;
+	const NonidealityCorrections m_solverCorrections;
+	const bool m_useMobilityConstraints;
 
 	const PVSize m_NMobilities;
 	const PVSize m_NParams;

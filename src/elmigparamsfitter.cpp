@@ -138,9 +138,11 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 	    const SysComp::InConstituent &analyte,
 	    const NonidealityCorrections corrs,
 	    const ParametersFixer *fixer,
+	    const FitOptions options,
 	    FitResults &results)
 {
-	MobDissocRegressor regressor(std::move(bufSysVec), InConstituentWrapper(analyte), corrs);
+	MobDissocRegressor regressor(std::move(bufSysVec), InConstituentWrapper(analyte), corrs,
+				     !isOptionSet(FO_DISABLE_MOB_CONSTRAINTS, options));
 
 	if (fixer != nullptr)
 		fixRegressParameters(regressor, fixer, analyte);
@@ -187,9 +189,9 @@ std::tuple<BufferSystemVec,
 	return { bVec, eVec };
 }
 
-bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte) noexcept
+bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte, const FitOptions options) noexcept
 {
-	return MobDissocRegressor::CheckAnalyteSanity(analyte);
+	return MobDissocRegressor::CheckAnalyteSanity(analyte, !isOptionSet(FO_DISABLE_MOB_CONSTRAINTS, options));
 }
 
 InBufferVec * ECHMET_CC createInBufferVec() noexcept
@@ -200,6 +202,11 @@ InBufferVec * ECHMET_CC createInBufferVec() noexcept
 ParametersFixer * ECHMET_CC createParametersFixer() noexcept
 {
 	return new (std::nothrow) ParametersFixerImpl();
+}
+
+FitOptions ECHMET_CC defaultFitOptions() noexcept
+{
+	return static_cast<FitOptions>(0);
 }
 
 const char * ECHMET_CC EMPFerrorToString(const RetCode tRet) noexcept
@@ -286,7 +293,8 @@ double ECHMET_CC mobilityUpperBound() noexcept
 	return MobDissocRegressor::MOBILITY_UPPER_BOUND;
 }
 
-RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, FitResults &results) noexcept
+RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, const FitOptions options,
+			  FitResults &results) noexcept
 {
 	if (system.analyte.mobilities->size() < 1 ||
 	    (system.analyte.pKas->size() != system.analyte.mobilities->size() - 1))
@@ -301,7 +309,8 @@ RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, 
 
 		return fit(std::move(std::get<0>(dataPack)),
 			   std::move(std::get<1>(dataPack)),
-			   system.analyte, system.corrections, fixer, results);
+			   system.analyte, system.corrections, fixer, options,
+			   results);
 	} catch (const std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (const BufferSystem::BufferSystemException &) {

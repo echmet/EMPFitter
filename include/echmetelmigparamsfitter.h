@@ -40,6 +40,26 @@ ECHMET_ST_ENUM(FixedParameterType) {
 };
 
 /*!
+ * Fit options
+ */
+ECHMET_WK_ENUM(FitOptions) {
+	FO_DISABLE_MOB_CONSTRAINTS = (1 << 0)
+	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterFitOptions)
+};
+
+template <typename T>
+bool isOptionSet(const T &item, const T &options)
+{
+#ifdef ECHMET_HAVE_CPP11
+	using UT = std::underlying_type<T>::type;
+
+	return static_cast<UT>(item) & static_cast<UT>(options);
+#else
+	return static_cast<int32_t>(item) & static_cast<int32_t>(options);
+#endif // ECHMET_HAVE_CPP11
+}
+
+/*!
  * Description of a tracepoint.
  */
 class TracepointInfo {
@@ -190,17 +210,22 @@ extern "C" {
 /*!
  * Checks whether analyte estimates are sane.
  *
- * Sane estimates must meet the following properties:
+ * Sane estimates must meet the following requirements:
  *
  * - All pKa values must be descending
  * - All charged forms must have non-zero mobility.
  * - Uncharged form must have zero mobility
  * - Mobility of consecutive forms must fall into range given by
  *   <tt>mobilityLowerBound()</tt> and <tt>mobilityUpperBound()</tt>.
+ *   This requirement may be overriden by setting <tt>FO_DISABLE_MOB_CONSTRAINTS</tt>
+ *   fit option.
+ *
+ * @param[in] analyte Analyte to be checked.
+ * @param[in] options Additional options that modify behavior of the fit algorithm.
  *
  * @return true if estimates are sane, false otherwise
  */
-ECHMET_API bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte) ECHMET_NOEXCEPT;
+ECHMET_API bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte, const FitOptions options) ECHMET_NOEXCEPT;
 
 /*!
  * Creates empty vector if input buffers.
@@ -215,6 +240,13 @@ ECHMET_API InBufferVec * ECHMET_CC createInBufferVec() ECHMET_NOEXCEPT;
  * @return Pointer to the gadget or <tt>NULL</tt> if the operation fails.
  */
 ECHMET_API ParametersFixer * ECHMET_CC createParametersFixer() ECHMET_NOEXCEPT;
+
+/*!
+ * Default fit options.
+ *
+ * @return Default fit options
+ */
+ECHMET_API FitOptions ECHMET_CC defaultFitOptions() ECHMET_NOEXCEPT;
 
 /*!
  * Converts return code to respective human-readable error string.
@@ -257,9 +289,11 @@ ECHMET_API double ECHMET_CC mobilityUpperBound() ECHMET_NOEXCEPT;
  *
  * @param[in] system Input description of the system to be processed.
  * @param[in] fixer Parameter fixing gadget. If the value is <tt>NULL</tt> all parameters are free.
+ * @param[in] options Additional options that modify behavior of the fit algorithm
  * @param[in,out] results Fitted parameters.
  */
-ECHMET_API RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, FitResults &results) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, const FitOptions options,
+				     FitResults &results) ECHMET_NOEXCEPT;
 
 /*!
  * Convenience function to properly release resources claimed by <tt>InBuffer</tt> object.

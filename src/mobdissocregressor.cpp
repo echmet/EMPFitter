@@ -118,11 +118,13 @@ CAES::TotalEquilibrium<double, true> MakeTotalEquilibrium(const SysComp::InConst
 }
 
 MobDissocRegressor::MobDissocRegressor(const BufferSystemVec &bufSysVec, const InConstituentWrapper &analyte,
-				       const NonidealityCorrections corrections) :
+				       const NonidealityCorrections corrections,
+				       const bool useMobilityConstraints) :
 	RFType(CountNumberOfParams(analyte())),
 	m_bufSysVec(bufSysVec),
 	m_analyte(analyte),
 	m_solverCorrections(corrections),
+	m_useMobilityConstraints(useMobilityConstraints),
 	m_NMobilities(CountNumberOfMobilities(analyte())),
 	m_NParams(CountNumberOfParams(analyte()))
 {
@@ -137,7 +139,8 @@ void MobDissocRegressor::AAssign(const RFType &otherBase)
 	const_cast<size_t&>(m_NParams) = other.m_NParams;
 	m_bufSysVec = other.m_bufSysVec;
 	m_analyte = other.m_analyte;
-	m_solverCorrections = other.m_solverCorrections;
+	const_cast<NonidealityCorrections&>(m_solverCorrections) = other.m_solverCorrections;
+	const_cast<bool&>(m_useMobilityConstraints) = other.m_useMobilityConstraints;
 }
 
 double MobDissocRegressor::ACalculateDerivative(const BufferSystem &x, const ParamsVector &params, const typename RFType::index_type param_idx, msize_t idx) const
@@ -169,13 +172,13 @@ double MobDissocRegressor::ACalculateFx(const BufferSystem &x, const ParamsVecto
 
 bool MobDissocRegressor::ACheckSanity(const ParamsVector &params) const
 {
-	return CheckSanityInternal(params, m_analyte(), m_NMobilities);
+	return CheckSanityInternal(params, m_analyte(), m_NMobilities, m_useMobilityConstraints);
 }
 
 MobDissocRegressor * MobDissocRegressor::ACreate() const
 {
 	/* Calling this with no parameters makes no sense. Can this break stuff? */
-	return new MobDissocRegressor(m_bufSysVec, m_analyte, m_solverCorrections);
+	return new MobDissocRegressor(m_bufSysVec, m_analyte, m_solverCorrections, m_useMobilityConstraints);
 }
 
 bool MobDissocRegressor::ASetInitialParameters(ParamsVector &params, const XTVector &x, const YTVector &y)
@@ -187,7 +190,7 @@ bool MobDissocRegressor::ASetInitialParameters(ParamsVector &params, const XTVec
 	return this->ACheckSanity(params);
 }
 
-bool MobDissocRegressor::CheckAnalyteSanity(const SysComp::InConstituent &analyte)
+bool MobDissocRegressor::CheckAnalyteSanity(const SysComp::InConstituent &analyte, const bool useMobilityConstraints)
 {
 	const auto NParams = CountNumberOfParams(analyte);
 
@@ -199,12 +202,12 @@ bool MobDissocRegressor::CheckAnalyteSanity(const SysComp::InConstituent &analyt
 
 	SetParametersRaw(params, analyte, NParams);
 
-	return CheckSanityInternal(params, analyte, CountNumberOfMobilities(analyte));
+	return CheckSanityInternal(params, analyte, CountNumberOfMobilities(analyte), useMobilityConstraints);
 }
 
 bool MobDissocRegressor::CheckSanity()
 {
-	if (!CheckAnalyteSanity(m_analyte()))
+	if (!CheckAnalyteSanity(m_analyte(), m_useMobilityConstraints))
 		return false;
 
 	return GetPCount() > 0;
@@ -397,7 +400,7 @@ double MobDissocRegressor::CalculateEffectiveMobility(const BufferSystem &x, con
 }
 
 bool MobDissocRegressor::CheckSanityInternal(const ParamsVector &params, const SysComp::InConstituent &analyte,
-					     const size_t NMobilities) noexcept
+					     const size_t NMobilities, const bool useMobilityConstraints) noexcept
 {
 	static const auto isMobilitiesReasonable = [](const double uPrev, const double uCurr,
 						      const double uBase) {
@@ -449,6 +452,9 @@ bool MobDissocRegressor::CheckSanityInternal(const ParamsVector &params, const S
 			return false;
 
 	}
+
+	if (!useMobilityConstraints)
+		return true;
 
 	/* 2)
 	 * Each additional charge can increase the overall mobility
