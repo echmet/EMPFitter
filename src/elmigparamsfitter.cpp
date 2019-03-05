@@ -23,9 +23,9 @@ namespace ElmigParamsFitter {
 static
 std::tuple<double> statDataFromVariance(const double variance) noexcept
 {
-	const double stDev = std::sqrt(variance);
+	const double stdErr = std::sqrt(variance);
 
-	return { stDev };
+	return { stdErr };
 }
 
 static
@@ -163,7 +163,14 @@ RetCode fit(BufferSystemVec bufSysVec, std::vector<double> expDataVec,
 		return RetCode::E_REGRESSOR_INTERNAL_ERROR;
 	}
 
-	return fillResults(regressor.GetParameters(), regressor.GetVariances(), analyte, regressor.GetRSquared(),
+	return fillResults(regressor.GetParameters(),
+			   [options, &regressor]() {
+				if (isOptionSet(FO_UNSCALED_STDERRS, options))
+					return regressor.GetVariancesUnscaled();
+				else
+					return regressor.GetVariancesScaled();
+			   }(),
+			   analyte, regressor.GetRSquared(),
 			   results);
 }
 

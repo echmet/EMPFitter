@@ -45,6 +45,7 @@ ECHMET_ST_ENUM(FixedParameterType) {
 ECHMET_WK_ENUM(FitOptions) {
 	FO_DISABLE_MOB_CONSTRAINTS = (1 << 0),	/*!< Disables constraning of limit mobilities to physically
 						     sensible values */
+	FO_UNSCALED_STDERRS = (1 << 1),		/*!< Use unscaled standard errors */
 	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterFitOptions)
 };
 
