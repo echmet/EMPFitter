@@ -129,8 +129,7 @@ class FittedParameter {
 public:
 	int charge;				/*!< Respective analyte charge */
 	double value;				/*!< Value of the parameter */
-	double stDev;				/*!< Standard deviation. The lower the <tt>stDev</tt> is
-						     the more reliable the result is. */
+	double stdErr;				/*!< Standard error of the value. */
 };
 IS_POD(FittedParameter)
 
