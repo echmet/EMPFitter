@@ -196,6 +196,45 @@ std::tuple<BufferSystemVec,
 	return { bVec, eVec };
 }
 
+static
+RetCode mobilityCurve(const InSystem &system, const InConstituentWrapper &analyte, ExpectedCurvePointVec *&curve) noexcept
+{
+	auto curveWrap = std::unique_ptr<ExpectedCurvePointVec,
+					 std::function<void (ExpectedCurvePointVec *)>>(ECHMET::createECHMETVec<ExpectedCurvePoint, false>(0),
+											[](ExpectedCurvePointVec *vec) { vec->destroy(); });
+	if (curveWrap == nullptr)
+		return RetCode::E_NO_MEMORY;
+
+	try {
+		auto bpack = makeBuffersVector(system.buffers, system.corrections);
+		const auto &prepBuffers = std::get<0>(bpack);
+
+		assert(prepBuffers.size() == system.buffers->size());
+
+		for (size_t idx = 0; idx < system.buffers->size(); idx++) {
+			const auto &inBuf = system.buffers->at(idx);
+			const auto &buffer = prepBuffers.at(idx);
+
+			try {
+				const auto uEff = MobDissocRegressor::SolveBuffer(buffer.composition(), analyte(),
+										  buffer.concentrationsRVec(), buffer.cH(),
+										  system.corrections);
+				auto tRet = curveWrap->push_back({ buffer.pH(), inBuf.uEffExperimental, uEff });
+				if (tRet != ECHMET::RetCode::OK)
+					return RetCode::E_NO_MEMORY;
+			} catch (const RegressCore::RegressException &ex) {
+				return RetCode::E_REGRESSOR_INTERNAL_ERROR;
+			}
+		}
+	} catch (const BufferSystem::BufferSystemException &ex) {
+		return RetCode::E_INVALID_BUFFER;
+	}
+
+	curve = curveWrap.release();
+
+	return RetCode::OK;
+}
+
 bool ECHMET_CC checkSanity(const SysComp::InConstituent &analyte, const FitOptions options) noexcept
 {
 	return MobDissocRegressor::CheckAnalyteSanity(analyte, !isOptionSet(FO_DISABLE_MOB_CONSTRAINTS, options));
@@ -235,12 +274,6 @@ const char * ECHMET_CC EMPFerrorToString(const RetCode tRet) noexcept
 
 RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &results, ExpectedCurvePointVec *&curve) noexcept
 {
-	auto curveWrap = std::unique_ptr<ExpectedCurvePointVec,
-					 std::function<void (ExpectedCurvePointVec *)>>(ECHMET::createECHMETVec<ExpectedCurvePoint, false>(0),
-											[](ExpectedCurvePointVec *vec) { vec->destroy(); });
-	if (curveWrap == nullptr)
-		return RetCode::E_NO_MEMORY;
-
 	InConstituentWrapper fixedAnalyte{system.analyte};
 
 	for (size_t idx = 0; idx < results.pKas->size(); idx++)
@@ -260,34 +293,7 @@ RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &result
 		}
 	}
 
-	try {
-		auto bpack = makeBuffersVector(system.buffers, system.corrections);
-		const auto &prepBuffers = std::get<0>(bpack);
-
-		assert(prepBuffers.size() == system.buffers->size());
-
-		for (size_t idx = 0; idx < system.buffers->size(); idx++) {
-			const auto &inBuf = system.buffers->at(idx);
-			const auto &buffer = prepBuffers.at(idx);
-
-			try {
-				const auto uEff = MobDissocRegressor::SolveBuffer(buffer.composition(), fixedAnalyte(),
-										  buffer.concentrationsRVec(), buffer.cH(),
-										  system.corrections);
-				auto tRet = curveWrap->push_back({ buffer.pH(), inBuf.uEffExperimental, uEff });
-				if (tRet != ECHMET::RetCode::OK)
-					return RetCode::E_NO_MEMORY;
-			} catch (const RegressCore::RegressException &ex) {
-				return RetCode::E_REGRESSOR_INTERNAL_ERROR;
-			}
-		}
-	} catch (const BufferSystem::BufferSystemException &ex) {
-		return RetCode::E_INVALID_BUFFER;
-	}
-
-	curve = curveWrap.release();
-
-	return RetCode::OK;
+	return mobilityCurve(system, fixedAnalyte, curve);
 }
 
 double ECHMET_CC mobilityLowerBound() noexcept
@@ -323,6 +329,13 @@ RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, 
 	} catch (const BufferSystem::BufferSystemException &) {
 		return RetCode::E_INVALID_BUFFER;
 	}
+}
+
+RetCode ECHMET_CC provisionalCurve(const InSystem &system, ExpectedCurvePointVec *&curve) noexcept
+{
+	InConstituentWrapper fixedAnalyte{system.analyte};
+
+	return mobilityCurve(system, fixedAnalyte, curve);
 }
 
 void ECHMET_CC releaseInBuffer(const InBuffer &buffer) noexcept

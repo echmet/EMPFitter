@@ -259,7 +259,7 @@ ECHMET_API FitOptions ECHMET_CC defaultFitOptions() ECHMET_NOEXCEPT;
 ECHMET_API const char * ECHMET_CC EMPFerrorToString(const RetCode tRet) ECHMET_NOEXCEPT;
 
 /*!
- * Computes expected pH vs. mobility curve.
+ * Computes expected pH vs. mobility curve using fit results.
  *
  * @param[in] system Description of the processed system.
  * @param[in] results Computed results.
@@ -295,6 +295,20 @@ ECHMET_API double ECHMET_CC mobilityUpperBound() ECHMET_NOEXCEPT;
  */
 ECHMET_API RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, const FitOptions options,
 				     FitResults &results) ECHMET_NOEXCEPT;
+
+
+/*!
+ * Computes expected pH vs. mobility curve using initial estimates.
+ *
+ * @param[in] system Description of the processed system.
+ * @param[in] results Computed results.
+ * @param[in,out] curve Pointer to vector of <tt>ExpectedCurvePoint</tt>s.
+ *
+ * @retval RetCode::E_MO_MEMORY Insufficient memory
+ * @retval RetCode::E_REGRESSOR_INTERNAL_ERROR Unable to compute expected mobility
+ * @retval RetCode::E_INVALID_BUFFER Invalid input buffer
+ */
+ECHMET_API RetCode ECHMET_CC provisionalCurve(const InSystem &system, ExpectedCurvePointVec *&curve) ECHMET_NOEXCEPT;
 
 /*!
  * Convenience function to properly release resources claimed by <tt>InBuffer</tt> object.
