@@ -296,14 +296,48 @@ RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResults &result
 	return mobilityCurve(system, fixedAnalyte, curve);
 }
 
-double ECHMET_CC mobilityLowerBound() noexcept
+RetCode ECHMET_CC mobilityBound(double &bound, const int charge, const MobilityBoundType btype, const SysComp::InConstituent &analyte) noexcept
 {
-	return MobDissocRegressor::MOBILITY_LOWER_BOUND;
-}
+	if (charge < analyte.chargeLow || charge > analyte.chargeHigh)
+		return RetCode::E_INVALID_ARGUMENT;
 
-double ECHMET_CC mobilityUpperBound() noexcept
-{
-	return MobDissocRegressor::MOBILITY_UPPER_BOUND;
+	if (std::abs(charge) <= 1) {
+		bound = 0.0;
+		return RetCode::OK;
+	}
+
+	int fromCharge;
+	int baseIdx;
+	double uBase;
+	int prevIdx;
+	if (charge < 0) {
+		fromCharge = analyte.chargeHigh > -2 ? -2 : analyte.chargeHigh - 1;
+		baseIdx = fromCharge + 1 - analyte.chargeLow;
+		uBase = analyte.mobilities->at(baseIdx) / std::abs(fromCharge + 1);
+		prevIdx = charge - analyte.chargeLow + 1;
+	} else {
+		fromCharge = analyte.chargeLow < 2 ? 2 : analyte.chargeLow + 1;
+		baseIdx = fromCharge - 1 - analyte.chargeLow;
+		uBase = analyte.mobilities->at(baseIdx) / std::abs(fromCharge - 1);
+		prevIdx = charge - analyte.chargeLow - 1;
+	}
+
+	if (prevIdx < 0 || prevIdx >= analyte.mobilities->size()) {
+		bound = 0.0;
+		return RetCode::OK;
+	}
+
+	const double uPrev = analyte.mobilities->at(prevIdx);
+	switch (btype) {
+	case MobilityBoundType::MB_LOWER:
+		bound = MobDissocRegressor::MobilityLowerBound(uPrev, uBase);
+		break;
+	case MobilityBoundType::MB_UPPER:
+		bound = MobDissocRegressor::MobilityUpperBound(uPrev, uBase);
+		break;
+	}
+
+	return RetCode::OK;
 }
 
 RetCode ECHMET_CC process(const InSystem &system, const ParametersFixer *fixer, const FitOptions options,

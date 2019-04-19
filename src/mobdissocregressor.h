@@ -83,6 +83,10 @@ public:
 
 	static bool CheckAnalyteSanity(const SysComp::InConstituent &analyte, const bool useMobilityConstraints);
 
+	static double MobilityLowerBound(const double uPrev, const double uBase) noexcept;
+
+	static double MobilityUpperBound(const double uPrev, const double uBase) noexcept;
+
 	/*!
 	 * Calculates effective mobility and optionally pH for a given combination
 	 * of buffer and analyte.
@@ -102,9 +106,6 @@ public:
 			   const RealVec *concentrations,
 			   const double cH,
 			   const NonidealityCorrections corrs);
-
-	constexpr static const double MOBILITY_LOWER_BOUND{0.55};
-	constexpr static const double MOBILITY_UPPER_BOUND{1.2};
 
 private:
 	/*!
@@ -145,6 +146,9 @@ private:
 
 	const PVSize m_NMobilities;
 	const PVSize m_NParams;
+
+	constexpr static const double MOBILITY_LOWER_BOUND{0.55};
+	constexpr static const double MOBILITY_UPPER_BOUND{1.2};
 };
 
 } // namespace ECHMET

@@ -49,6 +49,15 @@ ECHMET_WK_ENUM(FitOptions) {
 	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterFitOptions)
 };
 
+/*!
+ * Mobility bound selector
+ */
+ECHMET_ST_ENUM(MobilityBoundType) {
+	MB_LOWER = 0,				/*!< Lower bound */
+	MB_UPPER = 0x1,				/*!< Upper bound */
+	ENUM_FORCE_INT32_SIZE(ElmigParamsFitterMobilityBoundType)
+};
+
 template <typename T>
 bool isOptionSet(const T &item, const T &options)
 {
@@ -274,16 +283,15 @@ ECHMET_API RetCode ECHMET_CC expectedCurve(const InSystem &system, const FitResu
 /*!
  * Value of relative lower mobility bound
  *
- * @return Value of relative lower mobility bound
- */
-ECHMET_API double ECHMET_CC mobilityLowerBound() ECHMET_NOEXCEPT;
-
-/*!
- * Value of relative upper mobility bound
+ * @param[in,out] bound Value of the mobility bound.
+ * @param[in] charge Analyte's charge for which to get the bound.
+ * @param[in] btype Type of the bound (lower or upper).
+ * @param[in] analyte The analyte to use.
  *
- * @return Value of relative upper mobility bound
+ * @retval RetCode::OK Success
+ * @retval RetCode::E_INVALID_ARGUMENT Nonsensical input
  */
-ECHMET_API double ECHMET_CC mobilityUpperBound() ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC mobilityBound(double &bound, const int charge, const MobilityBoundType btype, const SysComp::InConstituent &analyte) ECHMET_NOEXCEPT;
 
 /*!
  * Performs the fit.

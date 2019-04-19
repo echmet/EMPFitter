@@ -404,8 +404,8 @@ bool MobDissocRegressor::CheckSanityInternal(const ParamsVector &params, const S
 {
 	static const auto isMobilitiesReasonable = [](const double uPrev, const double uCurr,
 						      const double uBase) {
-		const double lowerBound = uPrev + uBase * MOBILITY_LOWER_BOUND;
-		const double upperBound = uPrev + uBase * MOBILITY_UPPER_BOUND;
+		const double lowerBound = MobilityLowerBound(uPrev, uBase);
+		const double upperBound = MobilityUpperBound(uPrev, uBase);
 		return (uCurr > lowerBound) && (uCurr < upperBound);
 	};
 
@@ -509,6 +509,16 @@ MobDissocRegressor::PVSize MobDissocRegressor::CountNumberOfMobilities(const Sys
 MobDissocRegressor::PVSize MobDissocRegressor::CountNumberOfParams(const SysComp::InConstituent &analyte) noexcept
 {
 	return CountNumberOfMobilities(analyte) + analyte.pKas->size();
+}
+
+double MobDissocRegressor::MobilityLowerBound(const double uPrev, const double uBase) noexcept
+{
+	return uPrev + uBase * MOBILITY_LOWER_BOUND;
+}
+
+double MobDissocRegressor::MobilityUpperBound(const double uPrev, const double uBase) noexcept
+{
+	return uPrev + uBase * MOBILITY_UPPER_BOUND;
 }
 
 void MobDissocRegressor::SetParameters(ParamsVector &params, const SysComp::InConstituent &analyte)
