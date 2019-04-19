@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 project(ElmigParamsFitter)
 
 set(EMPF_VERSION_MAJOR 0)
-set(EMPF_VERSION_MINOR 3)
+set(EMPF_VERSION_MINOR 4)
 set(EMPF_VERSION_PATCH 0)
 
 add_definitions("-DECHMET_DLL_BUILD -D_USE_MATH_DEFINES")
