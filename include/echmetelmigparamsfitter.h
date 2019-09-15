@@ -309,7 +309,6 @@ ECHMET_API RetCode ECHMET_CC process(const InSystem &system, const ParametersFix
  * Computes expected pH vs. mobility curve using initial estimates.
  *
  * @param[in] system Description of the processed system.
- * @param[in] results Computed results.
  * @param[in,out] curve Pointer to vector of <tt>ExpectedCurvePoint</tt>s.
  *
  * @retval RetCode::E_MO_MEMORY Insufficient memory
